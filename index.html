@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Tail Log</title>
+  </head>
+  <style>li {list-style: none;}
+</style>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.0.1/lodash.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+  <script>
+    var socket = io();
+    socket.on('data', function(data) {
+      console.log(data.toString())
+      var lines = data.toString().split('\n');
+      _.forEach(lines, function(line) {
+        $("#output").append("<li>"+line+"</li>");
+      });
+    });
+  </script>
+  <body>
+  <ul id="output"><ul>
+    </form>
+  </body>
+</html>
