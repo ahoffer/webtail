@@ -10,13 +10,35 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.0.1/lodash.min.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
   <script>
-    var socket = io();
-    socket.on('data', function(data) {
-      console.log(data.toString())
+
+    localStorage.debug = '';
+
+    //Establish a Websocket (socket.io) connection to the server.
+    var socket = io({forceNew : true});
+
+    //Register interesting in the data event
+    socket.on('line', function(data) {
+      console.error('LINE');
+      //Convert a chunk of data to a collection of lines
       var lines = data.toString().split('\n');
+
+      //Convert a collection of lines to a collection of HTML list
+      //items and append them to another element.
+      //Then scroll the new item into view.
       _.forEach(lines, function(line) {
-        $("#output").append("<li>"+line+"</li>");
-      });
+        var li = $("<li/>")
+        li.text(line)
+        $("#output").append(li)
+        var element = li[0]
+        element.scrollIntoView()
+      })
+
+      //Tell the user the stream closed on the server.
+      // socket.on('end', function() {
+      //   console.error("END")
+      //   $("#output".append("<li>********** FILE STREAM CLOSED >**********</li>"))
+      // })
+
     });
   </script>
   <body>
