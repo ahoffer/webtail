@@ -1,12 +1,18 @@
 //Configuration
 var port = 8080;
-var fname = '/tmp/prbs/last.log';
 
 //Includes
 //var app = require('express')()
 var http = require('http')
-var io = require('socket.io')(http)
 var fs = require('fs')
+var stream = require('stream')
+var util = require('util');
+var process = require('process')
+var byline = require('byline');
+var LineStream = byline.LineStream;
+var stripBomStream = require('strip-bom-stream');
+var tail_stream = require('jimbly-tail-stream');
+
 
 // The fs library does not keep reading the file once the
 // file descriptor is created; as soon as createReadStream
@@ -18,58 +24,47 @@ var fs = require('fs')
 // when... I forget, but I remember I didn't like the behavior
 //var ts = require("tailing-stream")
 
-// The always-tail2 two is the most robust libarary, but it never
+// The always-tail2 two is the most robust library, but it never
 // sends a close or end event because it expects the log file will
 // start writing over itself when it gets full. That means I cannot
 // catch an event to tell a user the build process is complete.
-var Tail = require('always-tail2')
+var Tail = require('always-tail2');
 
-//Root path serves up the whole file in a request.
-//app.get('/', function(req, res) {
-//  res.sendFile(fname)
-//});
 
-//Register the tail endpoint
-//app.get('/tail', function(req,res) {
-//  res.sendFile(__dirname + '/index.html')
-//});
+var lister = new stream.Transform(this, {objectMode: true});
+lister._transform = function (chunk, encoding, callback) {
+    var input = chunk.toString();
+    var output = '<li>' + input + '</li>';
+    this.push(output);
+    callback();
+};
 
-//Register the Websocket handler
-io.on('connection', function (socket) {
-    console.error('CONNECTION')
-
-    //Stream must be created inside the io.on scope
-    //var readStream = ts.createReadStream(fname)
-    var readStream = new Tail(fname, '\n')
-
-    //Set up an HTML document to display the lines
-    res.write("<style>li {list-style: none;} </style><ul>");
-    //Squirt a chunk of data to the client
-    readStream.on('line', function (line) {
-        socket.emit('line', '<li>' + line + '</li>');
-    });
-
-    //Some streaming libraries throw the 'end' event.
-    //TODO: Enhance always-tail2 to throw close or end event.
-    readStream.on('end', function () {
-        socket.emit('end');
-    });
-});
+var liner = new LineStream();
 
 var server = http.createServer(function (req, res) {
-    fname = req.url;
-    console.error("GET " + fname);
-    //stream = fs.createReadStream(__dirname + '/index.html');
-    //res.writeHead(200, {
-    //    'Content-Type': 'text/html'
-    //});
-    //stream = fs.createReadStream(fname);
 
-//    res.writeHead(200, {
-//        'Content-Type': 'text/html'
-//    });
-//    res.write("<h1>" + fname + "</h1>");
-//    stream.pipe(res);
+    //Sluurp the file path and name from the requested URL
+    var fname = req.url;
+    console.error("GET " + fname);
+
+    //Tell the browser to expect an HTML document
+    res.writeHead(200, {
+        'Content-Type': 'text/html'
+    });
+
+    //Write just enough HTML to display text as list items
+    res.write("<style>li {list-style: none;} </style>\n<ul>\n");
+
+    var stream = tail_stream.createReadStream(fname);
+    //FYI. Some read sreams leave in the byte order marks (BOMs).
+    //Use a filter to strip them out.
+    stream.pipe(stripBomStream()).pipe(liner).pipe(lister).pipe(res);
+
+    //Clean up
+    res.on('end', function () {
+        s.close();
+    });
+
 });
 
 //Start Web server
