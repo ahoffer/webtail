@@ -1,9 +1,13 @@
 //Configuration
-var streamingServer = require('./streamingServer');
-start(streamingServer, 8080);
+var streamingServer = require('./streamingServer')
+var webSocketServer = require('./webSocketServer')
+start(streamingServer, 9090, "streaming server")
+start(webSocketServer, 8080, "web socket server")
 
-function start(server, port) {
+//Helper method
+function start(server, port, msg) {
   server.listen(port, function () {
-      console.log('listening on *:' + port);
+      msg === undefined ? '' : msg
+      console.log('listening on *:' + port + ' ' + msg);
   });
 }

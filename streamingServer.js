@@ -4,6 +4,7 @@ var stream = require('stream')
 var LineStream = require('byline').LineStream;
 var stripBomStream = require('strip-bom-stream');
 var tailStream = require('jimbly-tail-stream');
+var escape = require('escape-html');
 
 // The fs library does not keep reading the file once the
 // file descriptor is created; as soon as createReadStream
@@ -20,6 +21,12 @@ lister._transform = function (chunk, encoding, callback) {
     this.push(output);
     callback();
 };
+
+var escaper = new stream.Transform(this, {objectMode:true});
+escaper._transform = function(chunk, encoding, callback) {
+    this.push(escape(chunk));
+    callback();
+}
 
 var liner = new LineStream();
 
@@ -40,7 +47,7 @@ module.exports = http.createServer(function (req, res) {
     var fileStream = tailStream.createReadStream(fname);
     //FYI. Some read sreams leave in the byte order marks (BOMs).
     //Use a filter to strip them out.
-    fileStream.pipe(stripBomStream()).pipe(liner).pipe(lister).pipe(res);
+    fileStream.pipe(stripBomStream()).pipe(liner).pipe(escaper).pipe(lister).pipe(res);
 
     //Clean up
     res.on('end', function () {
