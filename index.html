@@ -25,15 +25,17 @@
         $("#output").append(li)
         appendCounter++;
 
-        // if(appendCounter > maxLines) {
-        //   $("li:first").remove()
-        // }
+        if(appendCounter > maxLines) {
+          $("li:first").remove()
+        }
 
         //Get the DOM element
         var element = li[0]
 
         //Scroll down
         element.scrollIntoView()
+
+        console.error("jey" + $("li").size())
       })
 
       // Tell the user the stream closed on the server.
