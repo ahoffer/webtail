@@ -4,31 +4,6 @@ var stream = require('stream')
 var LineStream = require('byline').LineStream;
 var stripBomStream = require('strip-bom-stream');
 var tailStream = require('jimbly-tail-stream');
-// var escape = require('escape-html');
-
-// The fs library does not keep reading the file once the
-// file descriptor is created; as soon as createReadStream
-// is called, subsequent write to the file do not become
-// part of the read stream.
-//var fs = require("fs");
-
-// Create transform stream to turn each line in the file into
-// HTML markup for a list item
-var lister = new stream.Transform(this, {objectMode: true});
-lister._transform = function (chunk, encoding, callback) {
-    var input = chunk.toString();
-    var output = '<li>' + input + '</li>';
-    this.push(output);
-    callback();
-};
-
-var escaper = new stream.Transform(this, {objectMode:true});
-// escaper._transform = function(chunk, encoding, callback) {
-//     this.push(escape(chunk));
-//     callback();
-// }
-
-var liner = new LineStream();
 
 module.exports = http.createServer(function (req, res) {
 
@@ -38,11 +13,8 @@ module.exports = http.createServer(function (req, res) {
 
     //Tell the browser to expect an HTML document
     res.writeHead(200, {
-        'Content-Type': 'text/html'
+        'Content-Type': 'text/plain'
     });
-
-    //Write just enough HTML to display text as list items (tested in Chrome)
-    res.write("<style>li {list-style: none;} </style>\n<ul>\n");
 
     var fileStream = tailStream.createReadStream(fname);
     fileStream.on('error', function(err) {console.error(err);
@@ -51,7 +23,7 @@ module.exports = http.createServer(function (req, res) {
 
     //FYI. Some read sreams leave in the byte order marks (BOMs).
     //Use a filter to strip them out.
-    fileStream.pipe(stripBomStream()).pipe(liner).pipe(lister).pipe(res);
+    fileStream.pipe(stripBomStream()).pipe(res);
 
     //Clean up
     res.on('end', function () {

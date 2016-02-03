@@ -5,8 +5,8 @@ var fname = '/tmp/prbs/last.log';
 var app = require('express')()
 var http = require('http').Server(app)
 var io = require('socket.io')(http)
-var escape = require('escape-html');
-var Tail = require('always-tail2');
+var tailStream = require('file-tail');
+var split = require('split');
 
 module.exports = http;
 
@@ -23,15 +23,16 @@ io.on('connection', function(socket) {
 
   //Stream must be created inside the io.on scope
   //var readStream = ts.createReadStream(fname)
-  var readStream = new Tail(fname, '\n')
+  var readStream = tailStream.startTailing(fname);
 
   //Squirt a chunk of data to the client
   readStream.on('line', function(line) {
-    console.error('line');
-    socket.emit('line', escape(line));
+  //var line = split(data.toString());
+  console.error(line);
+  socket.emit('line', line);
   });
 
-  //Some streaming libraries throw the 'end' event.
+  // Some streaming libraries throw the 'end' event.
   readStream.on('end', function() {
     socket.emit('end');
   });

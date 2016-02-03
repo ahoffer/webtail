@@ -2,15 +2,16 @@
 <html>
   <head>
     <title>Tail Log</title>
+    <style>li {list-style: none;}</style>
   </head>
-  <style>li {list-style: none;}
-</style>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.0.1/lodash.min.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+  <body>
+    <ul id="output"></ul>
+  </body>
   <script>
-
     //Establish a Websocket (socket.io) connection to the server.
     var socket = io({forceNew : true});
     var appendCounter = 0;
@@ -18,14 +19,15 @@
 
     //Register interesting in the data event
     socket.on('line', function(line) {
+      console.error("LINE" + line.toString());
         var li = $("<li/>")
         li.text(line)
         $("#output").append(li)
         appendCounter++;
 
-        if(appendCounter > maxLines) {
-          $("li:first").remove()
-        }
+        // if(appendCounter > maxLines) {
+        //   $("li:first").remove()
+        // }
 
         //Get the DOM element
         var element = li[0]
@@ -35,15 +37,9 @@
       })
 
       // Tell the user the stream closed on the server.
-
       socket.on('end', function() {
         console.error("END")
         $("#output".append("<li>********** FILE STREAM CLOSED >**********</li>"))
       })
-
   </script>
-  <body>
-  <ul id="output"><ul>
-    </form>
-  </body>
 </html>
