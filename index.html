@@ -13,12 +13,19 @@
 
     //Establish a Websocket (socket.io) connection to the server.
     var socket = io({forceNew : true});
+    var appendCounter = 0;
+    var maxLines = 1000;
 
     //Register interesting in the data event
     socket.on('line', function(line) {
         var li = $("<li/>")
         li.text(line)
         $("#output").append(li)
+        appendCounter++;
+
+        if(appendCounter > maxLines) {
+          $("li:first").remove()
+        }
 
         //Get the DOM element
         var element = li[0]
@@ -28,6 +35,7 @@
       })
 
       // Tell the user the stream closed on the server.
+
       socket.on('end', function() {
         console.error("END")
         $("#output".append("<li>********** FILE STREAM CLOSED >**********</li>"))

@@ -6,17 +6,15 @@ var app = require('express')()
 var http = require('http').Server(app)
 var io = require('socket.io')(http)
 var escape = require('escape-html');
+var Tail = require('always-tail2');
 
 module.exports = http;
 
-//Root path serves up the whole file in a request.
-app.get('/', function(req, res) {
-  res.sendFile(fname)
-});
-
 //Register the tail endpoint
-app.get('/tail', function(req,res) {
-  res.sendFile(__dirname + '/index.html')
+app.get('/', function(req,res) {
+  var htmlFile = __dirname + '/index.html'
+  console.log('Serving file ' + htmlFile)
+  res.sendFile(htmlFile)
 });
 
 //Register the Websocket handler
@@ -29,6 +27,7 @@ io.on('connection', function(socket) {
 
   //Squirt a chunk of data to the client
   readStream.on('line', function(line) {
+    console.error('line');
     socket.emit('line', escape(line));
   });
 
